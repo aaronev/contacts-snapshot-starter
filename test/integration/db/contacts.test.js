@@ -1,16 +1,12 @@
 const { expect } = require('chai')
 const { initDB } = require('../../helpers/db')
-const { get, del, edit, add } = require('../../../src/db/db')
-
-const table = 'test' 
-const insertColumns = ["first_name", "last_name"]
-const getCol1 = 'first_name'
-const getCol2 = 'last_name'
+const DBGenFunc = require('../../../src/db/db')
 
 describe('DB Generic Functions', () => {
+  var Test = new DBGenFunc('test', ["first_name", "last_name"])
   var newInfo;
   it('Creates information', () => 
-    add(table, insertColumns, ['aaron', 'villanueva']) 
+    Test.add(['aaron', 'villanueva']) 
     .then(newUser => {
       newInfo = newUser[0]
       expect(newUser[0].first_name).to.equal('aaron')
@@ -18,36 +14,38 @@ describe('DB Generic Functions', () => {
     })
   ),
   it('Updates information', () => 
-    edit(table, 'first_name', 'Billy', newInfo.first_name)
+    Test.edit('first_name', ['billy', newInfo.first_name])
     .then(updated => {
-      expect(updated[0].first_name).to.equal('Billy')
+      expect(updated[0].first_name).to.equal('billy')
       expect(updated[0].last_name).to.equal('villanueva')
     })
   ),
-  context('Reads all information:', () => {
-   it('From a table', () =>     
-      get.all(table).then( rows => {
-        expect(rows).to.be.an('array')
-        expect(rows[rows.length-1].first_name).to.equal('Billy')
-      })
-    ),
-   it('By a column and it\'s value', () => 
-      get.allByColumn(table, 'first_name', 'Jared')
+  it('Reads all information from a table', () =>     
+    Test.all().then( rows => {
+      expect(rows).to.be.an('array')
+      expect(rows.length).to.equal(1)
+    })
+  ),
+  it('Reads all information by a column and it\'s value', () => 
+      Test.allByColumn('first_name', 'billy')
       .then( rows => { 
-        expect(rows[0].last_name).to.equal('Grippe')
+        expect(rows[0].last_name).to.equal('villanueva')
       })
     ),
-   it('By meeting the values of two columns', () =>    
-      get.allByTwoColumns(
-        table, getCol1, getCol2, ['Jared', 'Grippe']
-      ).then( rows => { expect(rows[0].id).to.equal(1) })
-    )
-  }),
-  it('Deletes information', () => 
-    del(table, 'id', newInfo.id)
-    .then(deleted => {
-      expect(deleted[0].first_name).to.equal('Billy')
+  it('Reads all information by meeting the values of two columns', () =>    
+    Test.allByTwoColumns(
+      'first_name', 'last_name', ['billy', 'villanueva']
+    ).then( rows => { 
+      expect(rows[0]).to.deep.equal({
+        id: 1, first_name:'billy', last_name:'villanueva'
+      })
+    })
+  ),
+  it('Deletes rows by column and value', () => 
+    Test.del('id', newInfo.id).then(deleted => {
+      expect(deleted[0].first_name).to.equal('billy')
       expect(deleted[0].last_name).to.equal('villanueva')
     })
   )
+  Test.deleteAllRows()
 })

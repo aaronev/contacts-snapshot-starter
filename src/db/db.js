@@ -10,68 +10,97 @@ numOfCol = (columns) => {
   return col.join()
 }
 
-var get = {
-  all: (table) => 
-    db.any(`
+const DBGenFunc = class DBGenFunc {
+  constructor(table, addingColumns) {
+    this.table = table
+    this.columns = addingColumns
+  }
+  all() { 
+    return db.any(`
       SELECT 
         * 
       FROM 
-        ${table}
-    `),
-
-  allByColumn: (table, column, value) => 
-    db.any(`
+        ${this.table}`
+    )
+  }
+  allByColumn(column, value) {
+    return db.any(`
       SELECT 
         * 
       FROM 
-        ${table} 
+        ${this.table} 
       WHERE 
         ${column} = $1`, value
-    ),
-
-  allByTwoColumns: (table, col1, col2, values) => 
-    db.any(`
+    )
+  }
+  allByTwoColumns(col1, col2, values) {
+    return db.any(`
       SELECT 
         *
       FROM
-        ${table}
+        ${this.table}
       WHERE 
         ${col1} = $1
       AND
         ${col2} = $2`, values
     )
+  }
+  add(values) {
+    return db.any(`
+      INSERT INTO
+        ${this.table} (${
+          this.columns.join()
+        })
+      VALUES
+        (${
+          numOfCol(this.columns)
+        })
+      RETURNING 
+        *`, values
+    )
+  }
+  edit(column, values) {
+    return db.any(`
+      UPDATE 
+        ${this.table}
+      SET
+        ${column} = $1
+      WHERE
+        ${column} = $2
+      RETURNING
+        *`, values
+    )
+  }
+  del(column, value) {
+    return db.any(`
+      DELETE FROM 
+        ${this.table}
+      WHERE 
+        ${column} = $1
+      RETURNING
+        *`, value
+      )
+    }
+  deleteAllRows() {
+    return db.none(`
+      TRUNCATE TABLE 
+        ${this.table}
+      RESTART IDENTITY`
+    )
+  }
 }
 
-add = (table, columns, values) => 
-  db.any(`
-    INSERT INTO
-      ${table} (${columns.join()})
-    VALUES
-      (${numOfCol(columns)})
-    RETURNING 
-      *`, values
-  )
+module.exports = DBGenFunc
 
-edit = (table, column, newVal, oldVal) =>
-  db.any(`
-    UPDATE 
-      ${table}
-    SET
-      ${column} = $1
-    WHERE
-      ${column} = $2
-    RETURNING
-      *`, [newVal, oldVal]
-    )
 
-del = (table, column, value) =>
-  db.any(`
-    DELETE FROM 
-      ${table}
-    WHERE 
-      ${column} = $1
-    RETURNING
-      * `, value
-    )
 
-module.exports = { db, get, add, edit, del }
+
+
+
+
+
+
+
+
+
+

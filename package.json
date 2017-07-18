@@ -8,7 +8,8 @@
     "start:dev": "nodemon src/server.js",
     "db:reset": "dropdb contacts_development && createdb contacts_development && npm run load_schema",
     "load_schema": "psql -d contacts_development < src/db/schema/schema.sql",
-    "load_contacts": "psql -d contacts_development < test/seed/contacts.sql",
+    "load_contacts": "psql -d contacts_development < src/db/seed/contacts.sql",
+    "db:test":"psql -d contacts_development < test/testDB.sql",
     "test": "mocha test/integration/db/contacts.test.js"
   },
   "keywords": [],
