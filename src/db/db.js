@@ -2,19 +2,21 @@ const pgp = require('pg-promise')()
 const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/contacts_development'
 const db = pgp(connectionString)
 
-numOfCol = (columns) => {
-  let col = []
-  for (let i = 1; i < columns.length+1; i++) {
-    col.push('$'+ i)
-  }
-  return col.join()
-}
-
 const DBGenFunc = class DBGenFunc {
-  constructor(table, addingColumns) {
+
+  constructor(table, columnsForAdding) {
     this.table = table
-    this.columns = addingColumns
+    this.columns = columnsForAdding
   }
+
+  numOfValToAdd() {
+    let col = []
+    for (let i = 1; i <= this.columns.length; i++) {
+      col.push('$'+ i)
+    }
+    return col.join()
+  }
+
   all() { 
     return db.any(`
       SELECT 
@@ -23,7 +25,8 @@ const DBGenFunc = class DBGenFunc {
         ${this.table}`
     )
   }
-  allByColumn(column, value) {
+
+  getByColumn(column, value) {
     return db.any(`
       SELECT 
         * 
@@ -33,7 +36,8 @@ const DBGenFunc = class DBGenFunc {
         ${column} = $1`, value
     )
   }
-  allByTwoColumns(col1, col2, values) {
+
+  getByTwoColumns(col1, col2, values) {
     return db.any(`
       SELECT 
         *
@@ -45,20 +49,19 @@ const DBGenFunc = class DBGenFunc {
         ${col2} = $2`, values
     )
   }
+
   add(values) {
     return db.any(`
       INSERT INTO
-        ${this.table} (${
-          this.columns.join()
-        })
+        ${this.table} 
+        (${this.columns.join()})
       VALUES
-        (${
-          numOfCol(this.columns)
-        })
+        (${this.numOfValToAdd()})
       RETURNING 
         *`, values
     )
   }
+
   edit(column, values) {
     return db.any(`
       UPDATE 
@@ -71,7 +74,8 @@ const DBGenFunc = class DBGenFunc {
         *`, values
     )
   }
-  del(column, value) {
+
+  deleteRows(column, value) {
     return db.any(`
       DELETE FROM 
         ${this.table}
@@ -81,6 +85,7 @@ const DBGenFunc = class DBGenFunc {
         *`, value
       )
     }
+
   deleteAllRows() {
     return db.none(`
       TRUNCATE TABLE 
@@ -88,19 +93,18 @@ const DBGenFunc = class DBGenFunc {
       RESTART IDENTITY`
     )
   }
+
+  search(searchQuery) {
+    return db.any(`
+      SELECT
+        *
+      FROM
+        contacts
+      WHERE
+        lower(first_name || ' ' || last_name) LIKE $1::text
+      `, [`%${searchQuery.toLowerCase().replace(/\s+/,'%')}%`]
+    )
+  }
 }
 
 module.exports = DBGenFunc
-
-
-
-
-
-
-
-
-
-
-
-
-

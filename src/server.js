@@ -3,7 +3,7 @@ const bodyParser = require('body-parser')
 const dbContacts = require('./db/contacts')
 const app = express()
 const {renderError} = require('./server/utils')
-const routes = require('./server/routes');
+const routes = require('./server/routes/index');
 
 app.set('view engine', 'ejs');
 app.set('views', './src/views')
@@ -17,13 +17,15 @@ app.use((request, response, next) => {
 
 app.use('/', routes)
 
-app.use((request, response) => {
-  response.render('not_found')
-})
+// app.use((request, response) => {
+//   response.render('not_found')
+// })
 
 const port = process.env.PORT || 3000
-app.listen(port, () => {
-  console.log(`http://localhost:${port}`)
-})
+
+if(!module.parent) { // HOW?: {SOLVES: Uncaught Error: listen EADDRINUSE :::3000}
+  app.listen(port, 
+    console.log(`http://localhost:${port}`))
+}
 
 module.exports = app
