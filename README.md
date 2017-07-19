@@ -2,7 +2,20 @@
 
 ## Dev Setup
 
-1. Create your database: `createdb contacts_development`
-1. Load your database with the schema: `npm run load_schema`
-1. Install your dependencies: `npm install`
-1. Run the server: `nodemon`
+### Server 
+1. `npm run db:create`: creates your database
+1. `npm run db:schema`: loads your database with the schema
+1. `npm run db:seed`: seeds table in the database
+1. `npm install`: installs your dependencies
+1. `npm start`: runs the server
+
+### Test
+
+1. `npm run db:test` : creates a table called test for database functions
+1. `npm test` : runs all the test for app
+
+OR 
+
+1. `npm run db:test`
+1. `npm run test:dbfunc`: runs test for database functions
+1. `npm run test:routes`: runs test for http routes

@@ -1,67 +1,38 @@
-const db = require('./db')
+const  DB = require('./db')
+const contacts = new DB('contacts', ['first_name', 'last_name'])
 
-const createContact = function(contact, callback){
-  return db.query(`
-    INSERT INTO
-      contacts (first_name, last_name)
-    VALUES
-      ($1::text, $2::text)
-    RETURNING
-      *
-    `,
-    [
-      contact.first_name,
-      contact.last_name,
-    ])
-    .then(data => data)
-    .catch(error => error);
-}
+const createContact = (contact, callback) =>
+  contacts.add([
+    contact.first_name,
+    contact.last_name,
+  ])
+  .then(data => data[0])
+  .catch(error => error)
 
-const getContacts = function(){
-  return db.query(`
-    SELECT
-      *
-    FROM
-      contacts
-    `, [])
+const getContacts = () =>
+  contacts.all()
     .then(data => data)
-    .catch(error => error);
-}
+    .catch(error => error)
 
-const getContact = function(contactId){
-  return db.one(`
-    SELECT * FROM contacts WHERE id=$1::int LIMIT 1
-    `,
-    [contactId])
-    .then(data => data)
-    .catch(error => error);
-}
+const getContact = (contactId) => 
+  contacts.getByColumn('id', contactId)
+    .then(data => data[0])
+    .catch(error => error)
 
-const deleteContact = function(contactId){
-  return db.query(`
-    DELETE FROM
-      contacts
-    WHERE
-      id=$1::int
-    `,
-    [contactId])
-    .then(data => data)
-    .catch(error => error);
-}
+const deleteContact = (contactId) => 
+  contacts.deleteRows('id', contactId)
+    .then(data => data[0])
+    .catch(error => error)
 
-const searchForContact = function(searchQuery){
-  return db.query(`
-    SELECT
-      *
-    FROM
-      contacts
-    WHERE
-      lower(first_name || ' ' || last_name) LIKE $1::text
-    `,
-    [`%${searchQuery.toLowerCase().replace(/\s+/,'%')}%`])
+const searchForContact = (searchQuery) => 
+  contacts.search(searchQuery)
     .then(data => data)
-    .catch(error => error);
-}
+    .catch(error => error)
+
+const getContactByFirstLastName = (values) =>
+  contacts.getByTwoColumns('first_name', 'last_name', values)
+    .then(data => data)
+    .catch(error => error)
 
 module.exports = {
   createContact,
@@ -69,4 +40,5 @@ module.exports = {
   getContact,
   deleteContact,
   searchForContact,
+  getContactByFirstLastName,
 }
